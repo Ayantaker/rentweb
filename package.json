@@ -6,7 +6,6 @@
   "author": "Ayan Saha",
   "dependencies": {
     "async": "^0.2.10",
-    "bcrypt": "^3.0.8",
     "body-parser": "^1.18.3",
     "connect-flash": "^0.1.1",
     "ejs": "^2.6.1",
