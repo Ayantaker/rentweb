@@ -14,8 +14,8 @@ var express=     require("express"),
     moment = require('moment-timezone'),
     pdf=require("pdfkit"),
     nodemailer =             require('nodemailer'),
-    fs=require("fs"),
-    bcrypt = require('bcrypt');
+    fs=require("fs")
+  
     
   
 moment().format();
