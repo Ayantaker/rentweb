@@ -21,4 +21,5 @@ Please enter your credentials after it.
 if you face a commit error, please sync your directory with "git pull origin master" first and then do the push again.
 
 
-App Hostd at heroku : https://rentweb.herokuapp.com/ 
+Stable App Hosted at heroku : https://rentweb.herokuapp.com/ 
+Unstable App Hosted at : https://rentwebunstable.herokuapp.com/
