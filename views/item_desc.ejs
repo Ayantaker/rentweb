@@ -1,6 +1,39 @@
 
   
 <% include partials/header.ejs %>  
+<script>
+	function CategoryChange(){
+
+		var dict = {
+			'electronics': ['phone','computer'] ,
+			'vehicles': ['cycle','bike'],
+			'furnitures': ['table','chair'],
+			'clothings':['sherwani','suit'],
+			'kitchen': ['chimney','stove'],
+			'sports':['golf','camping']
+		}; // create an empty array
+
+
+		category = document.getElementById('category').value;
+
+		subcategory = document.getElementById('subcategory')
+
+		for (var key in dict) {
+			if (category != key){	
+					dict[key].forEach(item => {
+					subcategory.namedItem(item).style.display='none';
+				});
+			}else{
+					dict[key].forEach(item => {
+					subcategory.namedItem(item).style.display='block';
+				});
+			}
+			subcategory.selectedIndex = "0"
+		}
+
+	}
+</script>
+
 
 <link rel="stylesheet" href="./css/base.css">
    <link rel="stylesheet" href="./css/vendor.css">  
@@ -145,7 +178,8 @@
   <div class="form-group">
     <label for="category" class="labelmar"><b class="heading">Category of item:</b></label>
 	<!-- <input type="text" class="form-control" name="category" id="category" aria-describedby="emailHelp" placeholder="category"> -->
-	<select name="category" id="category" class = "form-control" aria-describedby="emailHelp">
+	<select name="category" id="category" class = "form-control" aria-describedby="emailHelp" onchange="return CategoryChange();">
+		<option value=""></option>
 		<option value="electronics">Electronics</option>
 		<option value="vehicles">Vehicles</option>
 		<option value="furnitures">Furnitures</option>
@@ -157,7 +191,21 @@
     
   <div class="form-group">
     <label for="subcategory" class="labelmar"><b class="heading">Sub-Category of item:</b></label>
-    <input type="text" class="form-control" name="subcategory" id="subcategory" aria-describedby="emailHelp" placeholder="sub-category">
+	<select name="subcategory" id="subcategory" class = "form-control" aria-describedby="emailHelp">
+		<option value=""></option>
+		<option id="phone" value="phone">Phone</option>
+		<option id="computer" value="computer">Computer</option>
+		<option id="cycle" value="cycle">Cycle</option>
+		<option id="bike" value="bike">Bike</option>
+		<option id="table" value="table">Table</option>
+		<option id="chair" value="chair">Chair</option>
+		<option id="sherwani" value="sherwani">Sherwani</option>
+		<option id="suit" value="suit">Suit</option>
+		<option id="chimney" value="chimney">Chimney</option>
+		<option id="stove" value="stove">Stove</option>
+		<option id="golf" value="golf">Golf-Kit</option>
+		<option id="camping" value="camping">Camping-Gear</option>
+	</select>
   </div>  
     
   <div class="form-group">
