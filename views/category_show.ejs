@@ -62,15 +62,16 @@
 				    }).get());
 				});
 			})
- function electronic() {
-  var checkBox = document.getElementById("category-1");
-  var text = document.getElementById("text");
-  if (checkBox.checked == true){
-    alert("Checkbox is checked!");
-  } else {
-     text.style.display = "none";
-  }
-}
+
+			function electronic() {
+				var checkBox = document.getElementById("category-1");
+				var text = document.getElementById("text");
+				if (checkBox.checked == true){
+					alert("Checkbox is checked!");
+				} else {
+					text.style.display = "none";
+				}
+			}
 
 
 		</script>
@@ -139,13 +140,9 @@
 									<div class="cart-dropdown">
 										<div class="cart-list">
 											
-											<% var i,sum=0,price %>
-
+										<% var i,sum=0,price %>
 										<% for (i = 0; i < cartitem.length; i++) { %>
-										  <% var x=quantity[i],month,week %>
-										 
-										  
-											
+										<% var x=quantity[i],month,week %> 
 										<%	if(x>=30){ %>
 										<%		month=Math.floor(x/30); %>
 										<%	x-=(30*month);%>
@@ -407,38 +404,21 @@
 				<div class="row">
 					<!-- ASIDE -->
 					<div id="aside" class="col-md-3">
-					<% if(cat=='electronics'){%>
-					<form method="post" action="/catitems/electronics/filter">
-					<%} %>
-					<% if(cat=='furnitures'){%>
-					<form method="post" action="/catitems/furnitures/filter">
-					<%} %>
-					<% if(cat=='clothings'){%>
-					<form method="post" action="/catitems/clothings/filter">
-					<%} %>
-					<% if(cat=='kitchen'){%>
-					<form method="post" action="/catitems/kitchen/filter">
-					<%} %>
-					<% if(cat=='sports'){%>
-					<form method="post" action="/catitems/sports/filter">
-					<%} %>
-					<% if(cat=='vehicles'){%>
-					<form method="post" action="/catitems/vehicles/filter">
-					<%} %>
+						<form method="post" action="/catitems/<%=category%>/filter">
 						<!-- aside Widget -->
 						<div class="aside">
 							<h3 class="aside-title">Categories</h3>
 							<div class="checkbox-filter">
-							<%	for(i=0;i<subcat.length;i++){ %>
-								<div class="input-checkbox">
-									<input type="checkbox" id="category-<%=i+1%>"  name="category" value=<%=subcat[i]%> >
-									<label for="category-<%=i+1%>">
-										<span></span>
-										<%=subcat[i].toUpperCase()%>S
-										<small>(120)</small>
-									</label>
-								</div>
-						<% 	}   %>
+								<% for (i = 0;i < subcategory.length; i++){ %>
+									<div class="input-checkbox">
+										<input type="checkbox" id=<%=subcategory[i]%>  name="subcategory" value=<%=subcategory[i]%> >
+										<label for=<%=subcategory[i]%>>
+											<span></span>
+												<%=subcategory[i]%>
+											<small>(120)</small>
+										</label>
+									</div>
+								<% } %>
 							</div>
 						</div>
 						<!-- /aside Widget -->
@@ -470,17 +450,16 @@
 						<div class="aside">
 							<h3 class="aside-title">Brand</h3>
 							<div class="checkbox-filter">
-								
-								<%	for(i=0;i<brand.length;i++){ %>
-								<div class="input-checkbox">
-									<input type="checkbox" id="brand-<%=i+1%>" name="brand" value=<%=brand[i]%> >
-									<label for="brand-<%=i+1%>">
-										<span></span>
-										<%=brand[i].toUpperCase()%>
-										<small>(578)</small>
-									</label>
-								</div>
-						<% 	}   %>
+								<% for (i = 0;i < brand.length; i++){ %>
+									<div class="input-checkbox">
+										<input type="checkbox" id=<%=brand[i]%> name="brand" value=<%=brand[i]%>> 
+										<label for=<%=brand[i]%>>
+											<span></span>
+											<%=brand[i]%>
+											<small>(578)</small>
+										</label>
+									</div>
+								<% } %>
 							</div>
 						</div>
 						<!-- /aside Widget -->

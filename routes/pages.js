@@ -5,7 +5,6 @@ var express=     require("express"),
     comment=     require("../models/comments.js"),
     profile=     require("../models/profile.js"),
     contact=     require("../models/contact.js"),
-    subcats=      require("../models/subcats.js"),
     methodOverride=require("method-override"),
     cart=        require("../models/cart.js"),
     order=        require("../models/orders.js"),
@@ -21,39 +20,6 @@ var express=     require("express"),
 moment().format();
 router.use(methodOverride("_method"));
 
-
-router.get("/subcat",function(req,res){
-    // subcats.create({
-    //     name:"electronics",
-    //     subcategory:["phone","camera","laptop","speakers"],
-    //     brand:["oneplus","sony","nikon","acer","dell","jbl"]
-    // },function(err,createditem){
-    //     res.send("subcategory created");
-    // })
-
-
-    subcats.create({
-        name:"clothings",
-        subcategory:["tshirt","sherwani","suit","jeans"],
-        brand:["lee cooper","manyavar","djc","turtle","jockey"]
-    },function(err){
-        subcats.create({
-            name:"furnitures",
-            subcategory:["chair","table","almirah","shelf"],
-            brand:["godrej","nilkamal","ikea","dxracer","jsupreme"]
-        },function(err){
-            subcats.create({
-        name:"vehicles",
-        subcategory:["car","bicycle","bus","bike"],
-        brand:["hyundai","tata","bmw","ferrari","hero","yamaha"]
-    },function(err,createditem){
-        res.send("subcategory created");
-    })
-        })
-    })
-
-   
-})
 
 
 router.get("/",function(req,res){
@@ -681,214 +647,222 @@ router.post("/contact",function(req,res){
   
 });  
 
+// This function returns the subcategory and brand in array of objects
+function getBrandSubcategory(items){
+    subcategory = []
+    brand = []
+    items.forEach(function(item){
+        if (subcategory.includes(item.subcategory) == false){
+            subcategory.push(item.subcategory)
+        }
+        if (brand.includes(item.brand) == false){
+            brand.push(item.brand)
+        }
+        
+    })
+
+    return [subcategory,brand]
+}
+// End
+
+
 router.get("/catitems/:category",function(req,res){
     
-    subcats.find({name:req.params.category},function(err,foundsubcat){
+    item.find({category:req.params.category}).sort( { avg_rating: -1 } ).exec(function(err,founditems){
         if(err){
             console.log(err);
         }else{
-            console.log(foundsubcat[0].subcategory)
-             item.find({category:req.params.category}).sort( { avg_rating: -1 } ).exec(function(err,founditems){
-            if(err){
-                console.log(err);
+
+            brandSubcategory = getBrandSubcategory(founditems)
+            if(req.user==undefined){
+                    res.render("category_show.ejs",{currentuser:req.user,category:req.params.category,item:founditems,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
             }else{
-                
-                if(req.user==undefined){
-                    console.log("hi");
-             res.render("category_show.ejs",{subcat:foundsubcat[0].subcategory,brand:foundsubcat[0].brand,currentuser:req.user,item:founditems,cat:req.params.category,category:foundsubcat.name})
-                }else{
                     cart.findOne({username:req.user.username}).populate("item").exec(function(err,foundcart){
                     if(err){
                         console.log(err);
                     }else{
                         
-                        res.render("category_show.ejs",{subcat:foundsubcat[0].subcategory,brand:foundsubcat[0].brand,cartitem:foundcart.item,currentuser:req.user,quantity:foundcart.quantity,item:founditems,cat:req.params.category,category:foundsubcat.name})
+                        res.render("category_show.ejs",{cartitem:foundcart.item,currentuser:req.user,quantity:foundcart.quantity,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
                     }
                 })
-                }
             }
-        })
+
         }
     })
     
-
-   
-   
-    
 })
 
+function sortitems(id,items){
 
+    switch(id){
+        case "1":
+            items.sort(function(a, b){
+                return b.avg_rating-a.avg_rating
+            })
+            break;
 
+        case "2":
+            items.sort(function(a, b){
+                return a.price_day-b.price_day
+            })
+            break;
+
+        case "3":
+            items.sort(function(a, b){
+                return b.price_day-a.price_day
+            })
+            break;
+
+        default:
+            items.slice().reverse()
+    }
+
+    return items
+
+}
 
 router.post("/catitems/:category/filter",function(req,res){
+
+    // If filtering is not based on category and brand
+        if(req.body.subcategory==undefined && req.body.brand==undefined){
+
+                item.find({$and:[{category:req.params.category},{ price_day: { $gte: req.body.minnum ,$lte: req.body.maxnum } }]},function(err,founditems){
+                    // Sorting items
+                        founditems = sortitems(req.body.sort,founditems)
+                    //End
+
+                    // Getting the brand and subcategory names
+                        brandSubcategory = getBrandSubcategory(founditems)
+                    // End
+                    // Checking if user is logged in provide cart info
+                        if (req.user==undefined){
+
+                            res.render("category_show.ejs",{currentuser:req.user,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
+
+                        }else{
+
+                            cart.findOne({username:req.user.username}).populate("item").exec(function(err,foundcart){
+                                if(err){
+                                    console.log(err);
+                                }else{
+                                    
+                                    res.render("category_show.ejs",{cartitem:foundcart.item,currentuser:req.user,quantity:foundcart.quantity,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
+                                }
+                            })
+
+                        }
+                    // End
+                })
+        }
+    // End
+
+    //If filtering is based on category and brand
+        else if(req.body.subcategory!=undefined && req.body.brand!=undefined){
+
+                item.find({$and:[{category:req.params.category},{ price_day: { $gte: req.body.minnum ,$lte: req.body.maxnum } },{subcategory:req.body.subcategory},{brand:req.body.brand}]},function(err,founditems){
+                    // Sorting items
+                        founditems = sortitems(req.body.sort,founditems)
+                    //End
+
+                    // Checking if user is logged in provide cart info
+                        if (req.user==undefined){
+
+                            res.render("category_show.ejs",{currentuser:req.user,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
+
+                        }else{
+
+                            cart.findOne({username:req.user.username}).populate("item").exec(function(err,foundcart){
+                                if(err){
+                                    console.log(err);
+                                }else{
+                                    
+                                    res.render("category_show.ejs",{cartitem:foundcart.item,currentuser:req.user,quantity:foundcart.quantity,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
+                                }
+                            })
+
+                        }
+                    // End
+
+                })
+        }
+    //End
+
+    // Either brand or subcategory based filtering
+        else{
+            // Subcategory not given
+                if(req.body.subcategory==undefined){                         
+                        item.find({$and:[{category:req.params.category},{ price_day: { $gte: req.body.minnum ,$lte: req.body.maxnum } },{brand:req.body.brand}]},function(err,founditems){
+                            // Sorting items
+                                founditems = sortitems(req.body.sort,founditems)
+                            //End
     
-     subcats.find({name:req.params.category},function(err,foundsubcat){
-            if(req.body.category==undefined && req.body.brand==undefined){
-        console.log('both undef')
-       
-        item.find({$and:[{category:req.params.category},{ price_day: { $gte: req.body.minnum ,$lte: req.body.maxnum } }]},function(err,founditems){
-                if(req.body.sort==1){
-           
-                    founditems.sort(function(a, b){
-                        return b.avg_rating-a.avg_rating
+                            // Getting the brand and subcategory names
+                                brandSubcategory = getBrandSubcategory(founditems)
+                            // End
+                    // Checking if user is logged in provide cart info
+                        if (req.user==undefined){
+
+                            res.render("category_show.ejs",{currentuser:req.user,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
+
+                        }else{
+
+                            cart.findOne({username:req.user.username}).populate("item").exec(function(err,foundcart){
+                                if(err){
+                                    console.log(err);
+                                }else{
+                                    
+                                    res.render("category_show.ejs",{cartitem:foundcart.item,currentuser:req.user,quantity:foundcart.quantity,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
+                                }
+                            })
+
+                        }
+                    // End
+
                     })
-                    }else if(req.body.sort==2){
-           
-                    founditems.sort(function(a, b){
-                        return a.price_day-b.price_day
-                    })
-                    
-                    }else if(req.body.sort==3){
-           
-                    founditems.sort(function(a, b){
-                        return b.price_day-a.price_day
-                    })
-                    
-                    }else{
-                        founditems=founditems.slice().reverse()
-                    }
-       if(req.user==undefined){
-                    
-                    res.render("category_show.ejs",{subcat:foundsubcat[0].subcategory,brand:foundsubcat[0].brand,currentuser:req.user,item:founditems,cat:req.params.category,category:foundsubcat.name})
-             
-                }else{
-                    cart.findOne({username:req.user.username}).populate("item").exec(function(err,foundcart){
-                    if(err){
-                        console.log(err);
-                    }else{
-                        
-                        res.render("category_show.ejs",{subcat:foundsubcat[0].subcategory,brand:foundsubcat[0].brand,cartitem:foundcart.item,currentuser:req.user,quantity:foundcart.quantity,item:founditems,cat:req.params.category,category:foundsubcat.name})
-                    }
-                })
                 }
-    })
-    }else if(req.body.category!=undefined && req.body.brand!=undefined){
-        console.log('none undef')
-        console.log(req.params.category+" "+req.body.category+" "+req.body.brand)
-        item.find({$and:[{category:req.params.category},{ price_day: { $gte: req.body.minnum ,$lte: req.body.maxnum } },{subcategory:req.body.category},{brand:req.body.brand}]},function(err,founditems){
-                console.log(founditems)
-                if(req.body.sort==1){
-           
-                    founditems.sort(function(a, b){
-                        return b.avg_rating-a.avg_rating
-                    })
-                    }else if(req.body.sort==2){
-           
-                    founditems.sort(function(a, b){
-                        return a.price_day-b.price_day
-                    })
-                    
-                    }else if(req.body.sort==3){
-           
-                    founditems.sort(function(a, b){
-                        return b.price_day-a.price_day
-                    })
-                    
-                    }else{
-                        founditems=founditems.slice().reverse()
-                    }
-                    
-       if(req.user==undefined){
-                    
-                    res.render("category_show.ejs",{subcat:foundsubcat[0].subcategory,brand:foundsubcat[0].brand,currentuser:req.user,item:founditems,cat:req.params.category,category:foundsubcat.name})
-             
-                }else{
-                    cart.findOne({username:req.user.username}).populate("item").exec(function(err,foundcart){
-                    if(err){
-                        console.log(err);
-                    }else{
-                        
-                        res.render("category_show.ejs",{subcat:foundsubcat[0].subcategory,brand:foundsubcat[0].brand,cartitem:foundcart.item,currentuser:req.user,quantity:foundcart.quantity,item:founditems,cat:req.params.category,category:foundsubcat.name})
-                    }
-                })
+            // End 
+
+            // Brand not given
+                else{                        
+                        item.find({$and:[{category:req.params.category},{ price_day: { $gte: req.body.minnum ,$lte: req.body.maxnum } },{subcategory:req.body.subcategory}]},function(err,founditems){
+                            // Sorting items
+                                founditems = sortitems(req.body.sort,founditems)
+                            //End
+    
+                            // Getting the brand and subcategory names
+                                brandSubcategory = getBrandSubcategory(founditems)
+                            // End
+
+                            // Checking if user is logged in provide cart info
+                                if (req.user==undefined){
+
+                                    res.render("category_show.ejs",{currentuser:req.user,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
+
+                                }else{
+
+                                    cart.findOne({username:req.user.username}).populate("item").exec(function(err,foundcart){
+                                        if(err){
+                                            console.log(err);
+                                        }else{
+                                            
+                                            res.render("category_show.ejs",{cartitem:foundcart.item,currentuser:req.user,quantity:foundcart.quantity,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
+                                        }
+                                    })
+
+                                }
+                            // End
+
+                        })
                 }
-    })
-    }else{
-        if(req.body.category==undefined){
-            console.log('subcat undef');
-             console.log(req.body.brand+" "+req.params.category);
-            
-        item.find({$and:[{category:req.params.category},{ price_day: { $gte: req.body.minnum ,$lte: req.body.maxnum } },{brand:req.body.brand}]},function(err,founditems){
-                if(req.body.sort==1){
-           
-                    founditems.sort(function(a, b){
-                        return b.avg_rating-a.avg_rating
-                    })
-                    }else if(req.body.sort==2){
-           
-                    founditems.sort(function(a, b){
-                        return a.price_day-b.price_day
-                    })
-                    
-                    }else if(req.body.sort==3){
-           
-                    founditems.sort(function(a, b){
-                        return b.price_day-a.price_day
-                    })
-                    
-                    }else{
-                        founditems=founditems.slice().reverse()
-                    }
-       if(req.user==undefined){
-                    
-                    res.render("category_show.ejs",{subcat:foundsubcat[0].subcategory,brand:foundsubcat[0].brand,currentuser:req.user,item:founditems,cat:req.params.category,category:foundsubcat.name})
-             
-                }else{
-                    cart.findOne({username:req.user.username}).populate("item").exec(function(err,foundcart){
-                    if(err){
-                        console.log(err);
-                    }else{
-                        
-                        res.render("category_show.ejs",{subcat:foundsubcat[0].subcategory,brand:foundsubcat[0].brand,cartitem:foundcart.item,currentuser:req.user,quantity:foundcart.quantity,item:founditems,cat:req.params.category,category:foundsubcat.name})
-                    }
-                })
-                }
-    })
-    }else if(req.body.brand==undefined){
-        console.log('brand undef')
-        item.find({$and:[{category:req.params.category},{ price_day: { $gte: req.body.minnum ,$lte: req.body.maxnum } },{subcategory:req.body.category}]},function(err,founditems){
-                if(req.body.sort==1){
-           
-                    founditems.sort(function(a, b){
-                        return b.avg_rating-a.avg_rating
-                    })
-                    }else if(req.body.sort==2){
-           
-                    founditems.sort(function(a, b){
-                        return a.price_day-b.price_day
-                    })
-                    
-                    }else if(req.body.sort==3){
-           
-                    founditems.sort(function(a, b){
-                        return b.price_day-a.price_day
-                    })
-                    
-                    }else{
-                        founditems=founditems.slice().reverse()
-                    }
-       if(req.user==undefined){
-                    
-                    res.render("category_show.ejs",{subcat:foundsubcat[0].subcategory,brand:foundsubcat[0].brand,currentuser:req.user,item:founditems,cat:req.params.category})
-             
-                }else{
-                    cart.findOne({username:req.user.username}).populate("item").exec(function(err,foundcart){
-                    if(err){
-                        console.log(err);
-                    }else{
-                        
-                        res.render("category_show.ejs",{subcat:foundsubcat[0].subcategory,brand:foundsubcat[0].brand,cartitem:foundcart.item,currentuser:req.user,quantity:foundcart.quantity,item:founditems,cat:req.params.category,category:foundsubcat.name})
-                    }
-                })
-                }
-    })
-    }
-    }
-            
-        })
-        
+            // End
+        }
+    // End       
 
 })
+
+
+
+
 router.get("/cart/:id/:index/:change",function(req,res){
     cart.findOne({_id:req.params.id},function(err,foundcart){
         if(err){
