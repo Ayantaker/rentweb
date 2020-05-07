@@ -891,7 +891,20 @@ router.get("/cart/:id/:index/:change",function(req,res){
 router.get("/profile2",function(req,res){
     res.render("profile2.ejs")
 })
-
+router.get("/cartnew1",function(req,res){
+    
+    cart.findOne({username:req.user.username}).populate("item").exec(function(err,foundcart){
+                        if(err){
+                            console.log(err);
+                        }else{
+                            
+                            res.render("cartnew1.ejs",{cart:foundcart,item:foundcart.item,quantity:foundcart.quantity,currentuser:req.user});
+                        }
+                    });
+    
+    
+    
+})
 module.exports=router;
 
 
