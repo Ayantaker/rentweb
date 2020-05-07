@@ -722,141 +722,149 @@ function sortitems(id,items){
 }
 
 router.post("/catitems/:category/filter",function(req,res){
+    item.find({category:req.params.category},function(err,allitems){
+        if(err){
+            console.log(err)
+        }else{
+             // If filtering is not based on category and brand
+                if(req.body.subcategory==undefined && req.body.brand==undefined){
 
-    // If filtering is not based on category and brand
-        if(req.body.subcategory==undefined && req.body.brand==undefined){
+                    item.find({$and:[{category:req.params.category},{ price_day: { $gte: req.body.minnum ,$lte: req.body.maxnum } }]},function(err,founditems){
+                        // Sorting items
+                            founditems = sortitems(req.body.sort,founditems)
+                        //End
 
-                item.find({$and:[{category:req.params.category},{ price_day: { $gte: req.body.minnum ,$lte: req.body.maxnum } }]},function(err,founditems){
-                    // Sorting items
-                        founditems = sortitems(req.body.sort,founditems)
-                    //End
+                        // Getting the brand and subcategory names
+                            brandSubcategory = getBrandSubcategory(allitems)
+                        // End
+                        // Checking if user is logged in provide cart info
+                            if (req.user==undefined){
 
-                    // Getting the brand and subcategory names
-                        brandSubcategory = getBrandSubcategory(founditems)
-                    // End
-                    // Checking if user is logged in provide cart info
-                        if (req.user==undefined){
+                                res.render("category_show.ejs",{currentuser:req.user,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
 
-                            res.render("category_show.ejs",{currentuser:req.user,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
+                            }else{
 
-                        }else{
+                                cart.findOne({username:req.user.username}).populate("item").exec(function(err,foundcart){
+                                    if(err){
+                                        console.log(err);
+                                    }else{
+                                        
+                                        res.render("category_show.ejs",{cartitem:foundcart.item,currentuser:req.user,quantity:foundcart.quantity,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
+                                    }
+                                })
 
-                            cart.findOne({username:req.user.username}).populate("item").exec(function(err,foundcart){
-                                if(err){
-                                    console.log(err);
-                                }else{
-                                    
-                                    res.render("category_show.ejs",{cartitem:foundcart.item,currentuser:req.user,quantity:foundcart.quantity,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
-                                }
-                            })
-
-                        }
-                    // End
-                })
-        }
-    // End
-
-    //If filtering is based on category and brand
-        else if(req.body.subcategory!=undefined && req.body.brand!=undefined){
-
-                item.find({$and:[{category:req.params.category},{ price_day: { $gte: req.body.minnum ,$lte: req.body.maxnum } },{subcategory:req.body.subcategory},{brand:req.body.brand}]},function(err,founditems){
-                    // Sorting items
-                        founditems = sortitems(req.body.sort,founditems)
-                    //End
-
-                    // Checking if user is logged in provide cart info
-                        if (req.user==undefined){
-
-                            res.render("category_show.ejs",{currentuser:req.user,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
-
-                        }else{
-
-                            cart.findOne({username:req.user.username}).populate("item").exec(function(err,foundcart){
-                                if(err){
-                                    console.log(err);
-                                }else{
-                                    
-                                    res.render("category_show.ejs",{cartitem:foundcart.item,currentuser:req.user,quantity:foundcart.quantity,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
-                                }
-                            })
-
-                        }
-                    // End
-
-                })
-        }
-    //End
-
-    // Either brand or subcategory based filtering
-        else{
-            // Subcategory not given
-                if(req.body.subcategory==undefined){                         
-                        item.find({$and:[{category:req.params.category},{ price_day: { $gte: req.body.minnum ,$lte: req.body.maxnum } },{brand:req.body.brand}]},function(err,founditems){
-                            // Sorting items
-                                founditems = sortitems(req.body.sort,founditems)
-                            //End
-    
-                            // Getting the brand and subcategory names
-                                brandSubcategory = getBrandSubcategory(founditems)
-                            // End
-                    // Checking if user is logged in provide cart info
-                        if (req.user==undefined){
-
-                            res.render("category_show.ejs",{currentuser:req.user,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
-
-                        }else{
-
-                            cart.findOne({username:req.user.username}).populate("item").exec(function(err,foundcart){
-                                if(err){
-                                    console.log(err);
-                                }else{
-                                    
-                                    res.render("category_show.ejs",{cartitem:foundcart.item,currentuser:req.user,quantity:foundcart.quantity,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
-                                }
-                            })
-
-                        }
-                    // End
-
+                            }
+                        // End
                     })
                 }
-            // End 
+            // End
 
-            // Brand not given
-                else{                        
-                        item.find({$and:[{category:req.params.category},{ price_day: { $gte: req.body.minnum ,$lte: req.body.maxnum } },{subcategory:req.body.subcategory}]},function(err,founditems){
-                            // Sorting items
-                                founditems = sortitems(req.body.sort,founditems)
-                            //End
-    
-                            // Getting the brand and subcategory names
-                                brandSubcategory = getBrandSubcategory(founditems)
-                            // End
+        //If filtering is based on category and brand
+            else if(req.body.subcategory!=undefined && req.body.brand!=undefined){
 
-                            // Checking if user is logged in provide cart info
-                                if (req.user==undefined){
+                    item.find({$and:[{category:req.params.category},{ price_day: { $gte: req.body.minnum ,$lte: req.body.maxnum } },{subcategory:req.body.subcategory},{brand:req.body.brand}]},function(err,founditems){
+                        // Sorting items
+                            founditems = sortitems(req.body.sort,founditems)
+                        //End
 
-                                    res.render("category_show.ejs",{currentuser:req.user,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
+                        // Checking if user is logged in provide cart info
+                            if (req.user==undefined){
 
-                                }else{
+                                res.render("category_show.ejs",{currentuser:req.user,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
 
-                                    cart.findOne({username:req.user.username}).populate("item").exec(function(err,foundcart){
-                                        if(err){
-                                            console.log(err);
-                                        }else{
-                                            
-                                            res.render("category_show.ejs",{cartitem:foundcart.item,currentuser:req.user,quantity:foundcart.quantity,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
-                                        }
-                                    })
+                            }else{
 
-                                }
-                            // End
+                                cart.findOne({username:req.user.username}).populate("item").exec(function(err,foundcart){
+                                    if(err){
+                                        console.log(err);
+                                    }else{
+                                        
+                                        res.render("category_show.ejs",{cartitem:foundcart.item,currentuser:req.user,quantity:foundcart.quantity,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
+                                    }
+                                })
+
+                            }
+                        // End
+
+                    })
+            }
+        //End
+
+        // Either brand or subcategory based filtering
+            else{
+                // Subcategory not given
+                    if(req.body.subcategory==undefined){                         
+                            item.find({$and:[{category:req.params.category},{ price_day: { $gte: req.body.minnum ,$lte: req.body.maxnum } },{brand:req.body.brand}]},function(err,founditems){
+                                // Sorting items
+                                    founditems = sortitems(req.body.sort,founditems)
+                                //End
+        
+                                // Getting the brand and subcategory names
+                                    brandSubcategory = getBrandSubcategory(allitems)
+                                // End
+                        // Checking if user is logged in provide cart info
+                            if (req.user==undefined){
+
+                                res.render("category_show.ejs",{currentuser:req.user,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
+
+                            }else{
+
+                                cart.findOne({username:req.user.username}).populate("item").exec(function(err,foundcart){
+                                    if(err){
+                                        console.log(err);
+                                    }else{
+                                        
+                                        res.render("category_show.ejs",{cartitem:foundcart.item,currentuser:req.user,quantity:foundcart.quantity,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
+                                    }
+                                })
+
+                            }
+                        // End
 
                         })
-                }
-            // End
-        }
-    // End       
+                    }
+                // End 
+
+                // Brand not given
+                    else{                        
+                            item.find({$and:[{category:req.params.category},{ price_day: { $gte: req.body.minnum ,$lte: req.body.maxnum } },{subcategory:req.body.subcategory}]},function(err,founditems){
+                                // Sorting items
+                                    founditems = sortitems(req.body.sort,founditems)
+                                //End
+        
+                                // Getting the brand and subcategory names
+                                    brandSubcategory = getBrandSubcategory(allitems)
+                                // End
+
+                                // Checking if user is logged in provide cart info
+                                    if (req.user==undefined){
+
+                                        res.render("category_show.ejs",{currentuser:req.user,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
+
+                                    }else{
+
+                                        cart.findOne({username:req.user.username}).populate("item").exec(function(err,foundcart){
+                                            if(err){
+                                                console.log(err);
+                                            }else{
+                                                
+                                                res.render("category_show.ejs",{cartitem:foundcart.item,currentuser:req.user,quantity:foundcart.quantity,item:founditems,category:req.params.category,brand:brandSubcategory[1],subcategory:brandSubcategory[0]})
+                                            }
+                                        })
+
+                                    }
+                                // End
+
+                            })
+                    }
+                // End
+            }
+        // End 
+            }
+        })
+
+   
+      
 
 })
 

@@ -36,8 +36,8 @@ var upload=multer({
     
 app.use(bodyParser.urlencoded({extended:true}));
 
-mongoose.connect("mongodb+srv://Ayantaker:propaladins@rentweb-qkb2c.mongodb.net/test?retryWrites=true&w=majority");
-//mongoose.connect("mongodb://localhost/rent_web");
+//mongoose.connect("mongodb+srv://Ayantaker:propaladins@rentweb-qkb2c.mongodb.net/test?retryWrites=true&w=majority");
+mongoose.connect("mongodb://localhost/rent_web");
 //PASSPORT CONFIG.....
 
 
@@ -151,7 +151,7 @@ app.post("/new_item",function(req,res){
         name:req.body.name,
         category:req.body.category,
         subcategory:req.body.subcategory,
-        brand:req.body.brand,
+        brand:req.body.brand.toLowerCase(),
         model:req.body.model,
         days:req.body.days,
         price_day:req.body.price_day,
@@ -222,8 +222,8 @@ app.put("/my_items/:id/edit",function isAuthorizedItem(req,res,next){
     })
 },function(req,res){
    
-   
-           upload(req,res,(err) =>{
+
+        upload(req,res,(err) =>{
         if(err){
             console.log(err);
         }else{
@@ -231,6 +231,8 @@ app.put("/my_items/:id/edit",function isAuthorizedItem(req,res,next){
         item.findByIdAndUpdate(req.params.id,{
         name:req.body.name,
         category:req.body.category,
+        subcategory:req.body.subcategory,
+        brand:req.body.brand.toLowerCase(),
         model:req.body.model,
         days:req.body.days,
         price_day:req.body.price_day,
