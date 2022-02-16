@@ -36,8 +36,8 @@ var upload=multer({
     
 app.use(bodyParser.urlencoded({extended:true}));
 
-mongoose.connect("mongodb+srv://Ayantaker:propaladins@rentweb-qkb2c.mongodb.net/test?retryWrites=true&w=majority");
-//mongoose.connect("mongodb://localhost/rent_web");
+
+mongoose.connect("mongodb://localhost/rent_web");
 //PASSPORT CONFIG.....
 
 
